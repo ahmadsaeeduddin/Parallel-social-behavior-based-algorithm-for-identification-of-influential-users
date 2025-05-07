@@ -8,7 +8,9 @@
 using namespace std;
 
 enum Layer : uint8_t { FOLLOW = 0, RETWEET = 1, MENTION = 2, REPLY = 3, NUM_LAYERS };
+
 static const char* layer_names[NUM_LAYERS] = { "FOLLOW", "RETWEET", "MENTION", "REPLY" };
+
 static const array<string, NUM_LAYERS> files = {
     "Dataset-Higgs-Twitter/higgs-social_network.edgelist",
     "Dataset-Higgs-Twitter/higgs-retweet_network.edgelist",

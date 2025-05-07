@@ -10,6 +10,8 @@ vtune_*/
 *.rpt
 *.p*
 *.amplxe
+*.idmap
+*.part.4
 
 # Ignore core dumps and executables
 *.out

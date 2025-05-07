@@ -5,13 +5,12 @@
 #include <random>
 #include <iostream>
 #include <omp.h>
-using namespace std;
 
-void generateInterestVectors(vector<Node>& graph) {
-    mt19937 gen(42);  // fixed seed for reproducibility
-    uniform_real_distribution<float> dist(0.0f, 1.0f);
+void generateInterestVectors(std::vector<Node>& graph) {
+    std::mt19937 gen(42);  // fixed seed for reproducibility
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    cout << "[LOG] Generating " << D << "-dimensional interest vectors\n";
+    std::cout << "[LOG] Generating " << D << "-dimensional interest vectors\n";
 
     // Log the number of threads being used
     int num_threads = 0;
@@ -21,7 +20,7 @@ void generateInterestVectors(vector<Node>& graph) {
         #pragma omp single
         {
             num_threads = omp_get_num_threads();
-            cout << "[LOG] OpenMP parallelization enabled with " << num_threads << " threads\n";
+            std::cout << "[LOG] OpenMP parallelization enabled with " << num_threads << " threads\n";
         }
     }
 
@@ -32,12 +31,12 @@ void generateInterestVectors(vector<Node>& graph) {
         int thread_id = omp_get_thread_num();
         if (u%100000 == 0)
         {
-            cout << "[LOG] Thread " << thread_id << " processing node " << u << "\n";
+            std::cout << "[LOG] Thread " << thread_id << " processing node " << u << "\n";
         }
 
         // Each thread needs its own random number generator
-        mt19937 thread_gen(42 + u); // Use a unique seed per thread
-        uniform_real_distribution<float> thread_dist(0.0f, 1.0f);
+        std::mt19937 thread_gen(42 + u); // Use a unique seed per thread
+        std::uniform_real_distribution<float> thread_dist(0.0f, 1.0f);
 
         auto& vec = graph[u].interest;
         vec.resize(D);
@@ -51,6 +50,6 @@ void generateInterestVectors(vector<Node>& graph) {
             vec[i] /= sum;
     }
 
-    cout << "[LOG] Interest vectors assigned\n";
+    std::cout << "[LOG] Interest vectors assigned\n";
 }
 #endif

@@ -3,14 +3,14 @@
 # ========== CONFIGURATION ==========
 SOURCE_FILE="main.cpp"
 EXECUTABLE="out"
-REMOTE_PATH="/home/saeed/Desktop/Parallel-social-behavior-based-algorithm-for-identification-of-influential-users/OpenMP+MPI"
+REMOTE_PATH="/home/saeed/Desktop/Parallel-social-behavior-based-algorithm-for-identification-of-influential-users/OpenMP+MPI+METIS"
 HOSTFILE="hosts.txt"
-OMP_THREADS=2900
+OMP_THREADS=4
 NUM_PROCESSES=4
 SLAVE_NODES=("192.168.10.3")  # Add more slave IPs if needed
 
 # ========== STEP 1: COMPILE ==========
-echo "[Compiling Code...]"
+echo "[Compiling MPI + OpenMP + METIS Code...]"
 mpic++ -fopenmp -o $EXECUTABLE $SOURCE_FILE
 
 if [ $? -ne 0 ]; then

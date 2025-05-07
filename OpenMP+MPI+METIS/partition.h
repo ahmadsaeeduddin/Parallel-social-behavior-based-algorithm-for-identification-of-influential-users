@@ -13,14 +13,34 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <unordered_map> 
 #include <omp.h> // Include OpenMP header
-using namespace std;
 
-void computeSCC_CAC(vector<Node>& graph) {
+std::unordered_map<int, int> load_metis_partitions(const std::string& partFile) {
+    std::unordered_map<int, int> nodeToPartition;
+    std::ifstream file(partFile);
+
+    if (!file.is_open()) {
+        std::cerr << "❌ Failed to open METIS partition file: " << partFile << "\n";
+        return nodeToPartition;
+    }
+
+    int nodeID = 0;
+    int partition;
+    while (file >> partition) {
+        nodeToPartition[nodeID++] = partition;
+    }
+
+    std::cout << "✅ Loaded METIS partition file: " << partFile 
+              << " with " << nodeToPartition.size() << " nodes.\n";
+    return nodeToPartition;
+}
+
+void computeSCC_CAC(std::vector<Node>& graph) {
     const int N = (int)graph.size();
 
     // 1) Build FOLLOW adjacency and reverse adjacency
-    vector<vector<int>> adj(N), radj(N);
+    std::vector<std::vector<int>> adj(N), radj(N);
     #pragma omp parallel for schedule(dynamic)
     for (int u = 0; u < N; ++u) {
         for (auto& e : graph[u].out[FOLLOW]) {
@@ -36,20 +56,20 @@ void computeSCC_CAC(vector<Node>& graph) {
     }
 
     // 2) First pass: DFS to compute finish order
-    vector<char> seen(N, 0);
-    vector<int> order;
+    std::vector<char> seen(N, 0);
+    std::vector<int> order;
     order.reserve(N);
-    stack<int> dfs;
+    std::stack<int> dfs;
 
     #pragma omp parallel
     {
-        vector<int> local_order;
+        std::vector<int> local_order;
         local_order.reserve(N);
 
         #pragma omp for schedule(dynamic)
         for (int i = 0; i < N; ++i) {
             if (!seen[i]) {
-                stack<int> local_dfs;
+                std::stack<int> local_dfs;
                 local_dfs.push(i << 1); // even=enter, odd=exit
                 while (!local_dfs.empty()) {
                     int x = local_dfs.top();
@@ -75,7 +95,7 @@ void computeSCC_CAC(vector<Node>& graph) {
     }
 
     // 3) Second pass: process in reverse finish order on radj
-    vector<int> compID(N, -1);
+    std::vector<int> compID(N, -1);
     int C = 0;
     for (int idx = N - 1; idx >= 0; --idx) {
         int v = order[idx];
@@ -83,7 +103,7 @@ void computeSCC_CAC(vector<Node>& graph) {
         // collect one SCC
         dfs.push(v);
         compID[v] = C;
-        vector<int> members;
+        std::vector<int> members;
         while (!dfs.empty()) {
             int u = dfs.top();
             dfs.pop();
@@ -107,7 +127,7 @@ void computeSCC_CAC(vector<Node>& graph) {
     }
 
     // 4) Identify CACs: any component with size==1 and no self-loop
-    vector<int> compSize(C, 0);
+    std::vector<int> compSize(C, 0);
     #pragma omp parallel for
     for (int v = 0; v < N; ++v) {
         #pragma omp atomic
@@ -123,7 +143,7 @@ void computeSCC_CAC(vector<Node>& graph) {
     }
 
     // 5) Build component DAG edges (no duplicates)
-    vector<vector<int>> cadj(C);
+    std::vector<std::vector<int>> cadj(C);
     #pragma omp parallel for
     for (int u = 0; u < N; ++u) {
         int cu = compID[u];
@@ -138,25 +158,25 @@ void computeSCC_CAC(vector<Node>& graph) {
 
     #pragma omp parallel for
     for (auto& nbrs : cadj) {
-        sort(nbrs.begin(), nbrs.end());
-        nbrs.erase(unique(nbrs.begin(), nbrs.end()), nbrs.end());
+        std::sort(nbrs.begin(), nbrs.end());
+        nbrs.erase(std::unique(nbrs.begin(), nbrs.end()), nbrs.end());
     }
 
     // 6) Compute topological levels via BFS from all sources
-    vector<int> indeg(C, 0);
+    std::vector<int> indeg(C, 0);
     for (int u = 0; u < C; ++u)
         for (int v : cadj[u]) indeg[v]++;
 
-    queue<int> q;
+    std::queue<int> q;
     for (int u = 0; u < C; ++u)
         if (indeg[u] == 0) q.push(u);
 
-    vector<int> clevel(C, 0);
+    std::vector<int> clevel(C, 0);
     while (!q.empty()) {
         int u = q.front();
         q.pop();
         for (int v : cadj[u]) {
-            clevel[v] = max(clevel[v], clevel[u] + 1);
+            clevel[v] = std::max(clevel[v], clevel[u] + 1);
             if (--indeg[v] == 0) q.push(v);
         }
     }
@@ -168,7 +188,7 @@ void computeSCC_CAC(vector<Node>& graph) {
     }
 
     // 8) CAC‐merge: for each singleton comp, try merge one‐level‐down CAC neighbors
-    vector<vector<int>> membersOf(C);
+    std::vector<std::vector<int>> membersOf(C);
     for (int v = 0; v < N; ++v)
         membersOf[compID[v]].push_back(v);
 
@@ -195,6 +215,6 @@ void computeSCC_CAC(vector<Node>& graph) {
     }
 
     // Done
-    cout << "[LOG] computeSCC_CAC: " << C << " initial SCCs, "
+    std::cout << "[LOG] computeSCC_CAC: " << C << " initial SCCs, "
               << "CAC-merged singleton chains\n";
 }
