@@ -1,0 +1,16 @@
+# Ignore all Dataset-Higgs-Twitter folders in any subdirectory
+**/Dataset-Higgs-Twitter/
+
+# Ignore all VTune result folders
+vtune_*/
+**/vtune_*/
+
+# (Optional) Also ignore all .vtune files or results if they have a different pattern
+*.vtune
+*.rpt
+*.p*
+*.amplxe
+
+# Ignore core dumps and executables
+*.out
+core
