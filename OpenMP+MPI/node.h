@@ -16,7 +16,7 @@ static const array<string, NUM_LAYERS> files = {
     "Dataset-Higgs-Twitter/higgs-reply_network.edgelist"
 };
 
-static constexpr int D = 10;
+static const int D = 10;
 
 struct Edge {
     uint32_t to;
